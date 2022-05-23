@@ -17,11 +17,15 @@ async def get_gif(ctx, args):
         if i == id:
             try:
                 url = node['media'][0]['gif']['url']
-            except Exception:
+            except KeyError:
                 try:
                     url = node['media'][0]['mp4']['url']
-                except Exception:
-                    url = node['media'][0]['tinygif']['url']
+                except KeyError:
+                    try:
+                        url = node['media'][0]['tinygif']['url']
+                    except KeyError:
+                        print('Could not retrieve GIF. KeyError')
+                        await ctx.send('Could not retrieve GIF')
             break
         i += 1
 
