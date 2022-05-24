@@ -1,27 +1,50 @@
 from discord.ext import commands
 from consts import BOT_TOKEN
-from youtube import get_link
+from youtube import get_link, play_song, skip_song, stop_song
 from tenor import get_gif
 
 
 bot = commands.Bot(command_prefix='->')
 
+
 @bot.command()
 async def ping(ctx):
     await ctx.send('pong')
 
-#-------------------------------------- TENOR -----------------------------------------------
+# -------------------------------------- TENOR -----------------------------------------------
+
+
 @bot.command()
 async def gif(ctx, *args):
-    await get_gif(ctx,join_args('+',args))
+    await get_gif(ctx, join_args('+', args))
 
-#-------------------------------------- YOUTUBE ---------------------------------------------
+# -------------------------------------- YOUTUBE ---------------------------------------------
+
+
 @bot.command()
-async def ytlink(ctx, *args):
-    await ctx.send(get_link(join_args('+',args)))
+async def search(ctx, *args):
+    await ctx.send(get_link(join_args('+', args)))
 
-#-------------------------------------- AUXILIAR --------------------------------------------
-def join_args(separator,args):
+
+@bot.command()
+async def play(ctx, *args):
+    await play_song(ctx, join_args('+', args), False)
+
+
+@bot.command()
+async def stop(ctx):
+    await stop_song(ctx)
+
+
+@bot.command()
+async def skip(ctx):
+    await skip_song(ctx)
+
+# -------------------------------------- AUXILIAR --------------------------------------------
+
+
+def join_args(separator, args):
     return separator.join(args)
+
 
 bot.run(BOT_TOKEN)
