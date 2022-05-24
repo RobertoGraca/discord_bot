@@ -115,7 +115,6 @@ async def stop_song(ctx):
 
 
 async def skip_song(ctx):
-    await ctx.send('Skipped this music')
 
     if ctx.author.voice is None:
         await ctx.send('You need to be in a voice channel')
@@ -132,6 +131,8 @@ async def skip_song(ctx):
         await channel.connect()
 
     voice_client = ctx.voice_client
+
+    await ctx.send('Skipped this music')
 
     voice_client.stop()
     if len(song_queue) < 1:
