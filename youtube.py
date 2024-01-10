@@ -1,8 +1,9 @@
 import discord
-import youtube_dl
 import urllib.request
 import re
 import asyncio
+from  yt_dlp import YoutubeDL
+from consts import BOT_NAME
 
 song_queue = {}
 
@@ -28,8 +29,9 @@ async def play_song(ctx, args, called_by_coroutine):
 
     is_connected = False
     for member in channel.members:
-        if member.bot and member.name == 'Robinho':
+        if member.bot and member.name == BOT_NAME:
             is_connected = True
+            break
 
     if not is_connected:
         await channel.connect()
@@ -46,18 +48,19 @@ async def play_song(ctx, args, called_by_coroutine):
     else:
         voice_client.stop()
         if len(song_queue) < 1:
-            await ctx.send('No more songs to play')
+            embed = discord.Embed(title=f'**No more songs to play**', colour=discord.Color.blue())
+            await ctx.send(embed=embed)
             await voice_client.disconnect()
             return
 
     if voice_client.is_playing():
 
         YDL_OPTIONS = {'format': "bestaudio"}
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+        with YoutubeDL(YDL_OPTIONS) as ydl:
             info = ydl.extract_info(url, download=False)
             title = info['title']
         embed = discord.Embed(title=f'**Queued**', colour=discord.Color.blue(),
-                              description=f'[{title}]({url})')
+                              description=f'[{title}]({url})\nRequested by {ctx.author.mention}')
         embed.set_thumbnail(url=info['thumbnails'][0]['url'])
         embed.set_footer(text=f'Position #{len(song_queue)}')
         await ctx.send(embed=embed)
@@ -65,19 +68,19 @@ async def play_song(ctx, args, called_by_coroutine):
         YDL_OPTIONS = {'format': "bestaudio"}
         FFMPEG_OPTIONS = {
             'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+        with YoutubeDL(YDL_OPTIONS) as ydl:
             url = next(iter(song_queue))
 
             info = ydl.extract_info(url, download=False)
 
             title = info['title']
-            url2 = info['formats'][0]['url']
-            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+            url2 = info['url']
+            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS, method='fallback')
             voice_client.play(source)
 
         embed = discord.Embed(title=f'**Now Playing**', colour=discord.Color.blue(),
                               description=f'[{title}]({url})\nRequested by {song_queue.get(url).author.mention}')
-        embed.set_thumbnail(url=info['thumbnails'][0]['url'])
+        embed.set_thumbnail(url=info['thumbnails'][len(info['thumbnails'])-1]['url'])
         await ctx.send(embed=embed)
         song_queue.pop(url)
 
@@ -99,7 +102,7 @@ async def stop_song(ctx):
 
     is_connected = False
     for member in channel.members:
-        if member.bot and member.name == 'Robinho':
+        if member.bot and member.name == BOT_NAME:
             is_connected = True
 
     if is_connected:
@@ -107,10 +110,12 @@ async def stop_song(ctx):
         ctx.voice_client.stop()
         await ctx.voice_client.disconnect()
 
-        await ctx.send('Stopped music playback')
+        embed = discord.Embed(title=f'**Stopped music playback**', colour=discord.Color.blue())
+        await ctx.send(embed=embed)
         return
     else:
-        await ctx.send('I need to be in a voice channel')
+        embed = discord.Embed(title=f'**I need to be in a voice channel**', colour=discord.Color.blue())
+        await ctx.send(embed=embed)
         return
 
 
@@ -132,7 +137,8 @@ async def skip_song(ctx):
 
     voice_client = ctx.voice_client
 
-    await ctx.send('Skipped this music')
+    embed = discord.Embed(title=f'**Skipped music**', colour=discord.Color.blue())
+    await ctx.send(embed=embed)
 
     voice_client.stop()
     if len(song_queue) < 1:
@@ -143,19 +149,19 @@ async def skip_song(ctx):
     YDL_OPTIONS = {'format': "bestaudio"}
     FFMPEG_OPTIONS = {
         'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+    with YoutubeDL(YDL_OPTIONS) as ydl:
         url = next(iter(song_queue))
 
         info = ydl.extract_info(url, download=False)
 
         title = info['title']
-        url2 = info['formats'][0]['url']
-        source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+        url2 = info['url']
+        source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS, method='fallback')
         voice_client.play(source)
 
     embed = discord.Embed(title=f'**Now Playing**', colour=discord.Color.blue(),
                           description=f'[{title}]({url})\nRequested by {song_queue.get(url).author.mention}')
-    embed.set_thumbnail(url=info['thumbnails'][0]['url'])
+    embed.set_thumbnail(url=info['thumbnails'][len(info['thumbnails'])-1]['url'])
     await ctx.send(embed=embed)
     song_queue.pop(url)
 

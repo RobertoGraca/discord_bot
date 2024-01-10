@@ -1,4 +1,4 @@
-from consts import API_TENOR_GIF_KEY,MY_MENTION
+from consts import API_TENOR_GIF_KEY
 import requests
 import discord
 import random

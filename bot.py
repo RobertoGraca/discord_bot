@@ -1,10 +1,12 @@
 from discord.ext import commands
+import discord
 from consts import BOT_TOKEN
 from youtube import get_link, play_song, skip_song, stop_song
 from tenor import get_gif
 
-
-bot = commands.Bot(command_prefix='->')
+intent = discord.Intents.default()
+intent.message_content = True
+bot = commands.Bot(command_prefix='->', intents=intent)
 
 
 @bot.command()
